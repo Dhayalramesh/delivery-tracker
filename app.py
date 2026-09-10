@@ -35,8 +35,15 @@ with st.expander("Design notes"):
 
 engagements = db.get_engagements()
 if not engagements:
-    st.warning("No engagements yet. Run `python seed_data.py` to load sample data.")
-    st.stop()
+    # Auto-seed on first load. SQLite is a local file excluded from git
+    # (see .gitignore), so a freshly deployed instance — like on Streamlit
+    # Cloud — always starts with an empty database. There's no way to run
+    # seed_data.py manually on a deployed container, so the app seeds
+    # itself silently the first time it finds no data. Works identically
+    # locally and when deployed.
+    import seed_data
+    seed_data.seed()
+    engagements = db.get_engagements()
 
 eng_options = {f"{e['client_name']} — {e['engagement_name']}": e["id"] for e in engagements}
 sel_eng_label = st.selectbox("Engagement", list(eng_options.keys()))
